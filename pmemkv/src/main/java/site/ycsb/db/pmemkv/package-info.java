@@ -19,4 +19,3 @@
  * The YCSB binding for <a href="http://github.com/pmem/pmemkv-java/">PmemKV</a>.
  */
 package site.ycsb.db;
-
