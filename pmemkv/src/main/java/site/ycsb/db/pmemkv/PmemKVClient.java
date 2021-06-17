@@ -15,10 +15,19 @@
  * LICENSE file.
  */
 
-package site.ycsb.db.pmemkv;
+ /*
+ * PmemKV client binding for YCSB.
+ *
+ * https://github.com/pmem/pmemkv-java
+ */
+package site.ycsb.db;
 
 import io.pmem.pmemkv.*;
-import site.ycsb.*;
+import site.ycsb.ByteArrayByteIterator;
+import site.ycsb.ByteIterator;
+import site.ycsb.DB;
+import site.ycsb.DBException;
+import site.ycsb.Status;
 
 import java.nio.ByteBuffer;
 import java.io.*;
@@ -75,7 +84,7 @@ class MapToByteBufferConverter implements Converter<Map<String, ByteIterator>> {
     Map<String, ByteIterator> result = new HashMap<>();
 
     while (input.remaining() != 0) {
-      final int keyLen = input.getInt(); // increments position by 4
+      final int keyLen = input.getInt(); /* increments position by 4 */
       byte[] values = new byte[keyLen];
       input.get(values, 0, keyLen);
       final String key = new String(values, 0, keyLen);
@@ -106,7 +115,7 @@ public class PmemKVClient extends DB {
     synchronized(PmemKVClient.class) {
       if (db == null) {
         Properties props = getProperties();
-        // use cmap as default engine
+        /* use cmap as default engine */
         String engineName = props.getProperty(ENGINE_PROPERTY, "cmap");
 
         String path = props.getProperty(PATH_PROPERTY);
@@ -119,7 +128,7 @@ public class PmemKVClient extends DB {
         }
         boolean startError = false;
         try {
-          // try to open db first
+          /* try to open db first */
           db = new Database.Builder<byte[], Map<String, ByteIterator>>(engineName)
               .setSize(Long.parseLong(size))
               .setPath(path)
@@ -131,7 +140,7 @@ public class PmemKVClient extends DB {
         }
         if (startError) {
           try {
-            // or create it, if it doesn't exist
+            /* or create it, if it doesn't exist */
             db = new Database.Builder<byte[], Map<String, ByteIterator>>(engineName)
                 .setSize(Long.parseLong(size))
                 .setPath(path)
@@ -177,7 +186,7 @@ public class PmemKVClient extends DB {
   @Override
   public Status scan(final String table, final String startkey, final int recordcount, final Set<String> fields,
                      final Vector<HashMap<String, ByteIterator>> result) {
-    // TODO(kfilipek): Implement if possible/necessary
+    /* TODO(kfilipek): Implement if possible/necessary */
     return Status.NOT_IMPLEMENTED;
   }
 

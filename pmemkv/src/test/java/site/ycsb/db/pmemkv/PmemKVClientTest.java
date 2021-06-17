@@ -15,7 +15,7 @@
  * LICENSE file.
  */
 
-package site.ycsb.db.pmemkv;
+package site.ycsb.db;
 
 import site.ycsb.ByteIterator;
 import site.ycsb.Status;
@@ -126,7 +126,7 @@ public class PmemKVClientTest {
     final Status result = instance.update(MOCK_TABLE, MOCK_KEY2, newValues);
     assertEquals(Status.OK, result);
 
-    //validate that the values changed
+    /* validate the values changed */
     final Map<String, ByteIterator> resultParam = new HashMap<>(NUM_RECORDS);
     instance.read(MOCK_TABLE, MOCK_KEY2, MOCK_DATA.keySet(), resultParam);
 
