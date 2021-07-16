@@ -6,7 +6,6 @@ name: Java CI with Maven
 on:
   pull_request:
   push:
-    branches: [ master ]
 
 defaults:
   run:
@@ -27,8 +26,46 @@ jobs:
       with:
         java-version: 1.8
 
-    - name: Install libpmemkv with deps
-      run: sudo apt install libpmemkv-dev
+    - name: Prepare build directory
+      run: mkdir build_dependencies
+
+    - name: Install required dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y autoconf automake debhelper devscripts gdb libdaxctl-dev libmemkind-dev libndctl-dev libtbb-dev pandoc python3 rapidjson-dev
+
+    - name: Pull and install pmdk - HEAD
+      run: |
+        pushd build_dependencies
+        git clone https://github.com/pmem/pmdk
+        pushd pmdk
+        make -j$(nproc) DOC=n BUILD_PACKAGE_CHECK=n dpkg prefix=/usr
+        sudo dpkg -i dpkg/libpmem_*.deb dpkg/libpmem-dev_*.deb
+        sudo dpkg -i dpkg/libpmemobj_*.deb dpkg/libpmemobj-dev_*.deb
+
+    - name: Pull and install libpmemobj-cpp - HEAD
+      run: |
+        pushd build_dependencies
+        git clone https://github.com/pmem/libpmemobj-cpp
+        pushd libpmemobj-cpp
+        mkdir build
+        pushd build
+        cmake .. -DCPACK_GENERATOR="DEB" -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTS=OFF -DTESTS_USE_VALGRIND=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF
+        make -j$(nproc) package
+        sudo dpkg -i libpmemobj++*.deb
+
+    - name: Pull and install pmemkv - HEAD
+      run: |
+        pushd build_dependencies
+        git clone https://github.com/pmem/pmemkv
+        pushd pmemkv
+        mkdir build
+        pushd build
+        cmake .. -DCPACK_GENERATOR="DEB" -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_TESTS=OFF -DTESTS_USE_VALGRIND=OFF -DBUILD_EXAMPLES=OFF -DBUILD_DOC=OFF
+        make -j$(nproc) package
+        sudo dpkg -i libpmemkv*.deb
 
     - name: Build pmemkv module of YCSB
       run: mvn -pl site.ycsb:pmemkv-binding -am package
+
+    # ./bin/ycsb.sh load pmemkv -P workloads/workloadc -p pmemkv.engine=cmap -p pmemkv.dbsize=10240000 -p pmemkv.dbpath=/dev/shm/testfile

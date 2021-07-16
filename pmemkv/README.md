@@ -23,7 +23,7 @@ It uses the PmemKV Java bindings.
 
 ### 0. Install PmemKV Java Binding
 **Optionally** you can compile and install custom version of PmemKV Java binding.
-The min. supported version is `1.1.0`.
+The min. supported version is `1.2.0`.
 
 >Note: If you want to use custom installation, you'll have to set additional
 >maven parameter for building/execution of **PmemKV module**: `-Dpmemkv.packageName=pmemkv`.
@@ -54,14 +54,17 @@ Then, you can run the workload:
 
     bin/ycsb.sh run pmemkv -P workloads/workloada -p pmemkv.engine=cmap -p pmemkv.dbsize=DB_SIZE -p pmemkv.dbpath=/path/to/pmem/pool
 
+XXX extra params setup XXX
+
 ## Configuration Options
 Driver has a few configuration options to parametrize engine, path, and size using the following:
 
-| Parameter     | Meaning        | Obligatory |
-| :-----------: | -------------- | :--------: |
-| pmemkv.engine | Storage engine | N          |
-| pmemkv.dbpath | Pool file path | Y          |
-| pmemkv.dbsize | Pool file size | Y          |
+| Parameter             | Meaning                    | Obligatory |
+| :-------------------: | -------------------------- | :--------: |
+| pmemkv.engine         | Storage engine             | N          |
+| pmemkv.dbpath         | Pool file path             | Y          |
+| pmemkv.dbsize         | Pool file size             | Y          |
+| pmemkv.jsonconfigfile | Extra engine config params | N          |
 
 To check possible values for storage engine see
 [pmemkv's documentation](https://github.com/pmem/pmemkv#storage-engines).

@@ -33,7 +33,7 @@ LICENSE file.
   <properties>
     <!-- extra parameters to allow easier building with pmemkv from sources -->
     <pmemkv.packageName>pmemkv-root</pmemkv.packageName>
-    <pmemkv.packageVersion>[1.1.0,)</pmemkv.packageVersion>
+    <pmemkv.packageVersion>1.2.0</pmemkv.packageVersion>
   </properties>
 
   <dependencies>
