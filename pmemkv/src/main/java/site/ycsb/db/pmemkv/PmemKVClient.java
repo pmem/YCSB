@@ -30,6 +30,7 @@ import site.ycsb.DBException;
 import site.ycsb.Status;
 
 import java.nio.ByteBuffer;
+import java.nio.file.*;
 import java.io.*;
 import java.util.*;
 
@@ -104,8 +105,9 @@ class MapToByteBufferConverter implements Converter<Map<String, ByteIterator>> {
  */
 public class PmemKVClient extends DB {
   public static final String ENGINE_PROPERTY = "pmemkv.engine";
-  public static final String SIZE_PROPERTY = "pmemkv.dbsize";
   public static final String PATH_PROPERTY = "pmemkv.dbpath";
+  public static final String SIZE_PROPERTY = "pmemkv.dbsize";
+  public static final String JSON_CONFIG_PROPERTY = "pmemkv.jsonconfigfile";
 
   private static Database<byte[], Map<String, ByteIterator>> db = null;
   private static int activeThreads = 0;
@@ -119,19 +121,43 @@ public class PmemKVClient extends DB {
         String engineName = props.getProperty(ENGINE_PROPERTY, "cmap");
 
         String path = props.getProperty(PATH_PROPERTY);
+        String size = props.getProperty(SIZE_PROPERTY);
+        String jsonConfigProp = props.getProperty(JSON_CONFIG_PROPERTY);
+        Path jsonConfigFile = null;
+        String jsonConfigContent = "";
+        if (jsonConfigProp != null && !jsonConfigProp.isEmpty()) {
+          jsonConfigFile = Paths.get(jsonConfigProp);
+          try {
+            if (jsonConfigFile != null) {
+              for (String line : Files.readAllLines(jsonConfigFile)) {
+                jsonConfigContent += line;
+              }
+            }
+          } catch (IOException e) {
+            throw new DBException(JSON_CONFIG_PROPERTY +
+              " contain faulty path or points to improper json config params");
+          }
+        }
+
         if (path == null) {
           throw new DBException(PATH_PROPERTY + " is obligatory to run PmemKV client");
         }
-        String size = props.getProperty(SIZE_PROPERTY);
         if (size == null) {
           throw new DBException(SIZE_PROPERTY + " is obligatory to run PmemKV client");
         }
+
         boolean startError = false;
+        Database.Builder<byte[], Map<String, ByteIterator>> builder = null;
+
+        /* try to open db first */
         try {
-          /* try to open db first */
-          db = new Database.Builder<byte[], Map<String, ByteIterator>>(engineName)
-              .setSize(Long.parseLong(size))
+          builder = new Database.Builder<byte[], Map<String, ByteIterator>>(engineName);
+          if (!jsonConfigContent.isEmpty()) {
+            builder = builder.fromJson(jsonConfigContent);
+          }
+          db = builder
               .setPath(path)
+              .setSize(Long.parseLong(size))
               .setKeyConverter(new ByteConverter())
               .setValueConverter(new MapToByteBufferConverter())
               .build();
@@ -139,11 +165,15 @@ public class PmemKVClient extends DB {
           startError = true;
         }
         if (startError) {
+          /* or create it, if it doesn't exist */
           try {
-            /* or create it, if it doesn't exist */
-            db = new Database.Builder<byte[], Map<String, ByteIterator>>(engineName)
-                .setSize(Long.parseLong(size))
+            builder = new Database.Builder<byte[], Map<String, ByteIterator>>(engineName);
+            if (!jsonConfigContent.isEmpty()) {
+              builder = builder.fromJson(jsonConfigContent);
+            }
+            db = builder
                 .setPath(path)
+                .setSize(Long.parseLong(size))
                 .setKeyConverter(new ByteConverter())
                 .setValueConverter(new MapToByteBufferConverter())
                 .setForceCreate(true)
